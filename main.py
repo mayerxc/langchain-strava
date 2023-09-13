@@ -5,9 +5,10 @@ import sys
 # from langchain.embeddings.openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import DirectoryLoader, JSONLoader
+from langchain.document_loaders import DirectoryLoader, JSONLoader, TextLoader
 from langchain.indexes import VectorstoreIndexCreator
-from langchain.chains import ConversationalRetrievalChain
+
+# from langchain.chains import ConversationalRetrievalChain
 
 
 # load all environmental variables
@@ -18,16 +19,30 @@ os.getenv("OPENAI_API_KEY")
 # llm = OpenAI()
 chat_model = ChatOpenAI(model="gpt-3.5-turbo")
 
-# glob="**/*.json"
-loader = DirectoryLoader(
-    "data/", loader_cls=JSONLoader, loader_kwargs={"jq_schema": ".content"}
-)
-index = VectorstoreIndexCreator().from_loaders([loader])
+# TextLoader
+# loader_kwargs={"jq_schema": ".content", "json_lines": True}
+# loader = DirectoryLoader(
+#     "data/",
+#     loader_cls=JSONLoader,
+#     glob="**/*.json",
+#     loader_kwargs={
+#         "jq_schema": ".[]",
+#     },
+# )
+loader2 = DirectoryLoader("data/", loader_cls=TextLoader)
+
+# docs = loader.load()
+docs = loader2.load()
+# print(f"docs count {len(docs)}")
+# print(f"docs: {docs[0]}")
 
 
-# llm.predict("hi!")
-# >>> "Hi"
-query = input("Prompt:")
+# index = VectorstoreIndexCreator().from_loaders([loader])
+index = VectorstoreIndexCreator().from_loaders([loader2])
+query = input("Prompt: ")
+result = index.query(query)
+print(result)
+
 # result = chat_model.predict(query)
 # print(result)
 
@@ -46,5 +61,3 @@ query = input("Prompt:")
 
 #     chat_history.append((query, result["answer"]))
 #     query = None
-result = index.query(query)
-print(result)
