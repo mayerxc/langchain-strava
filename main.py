@@ -19,8 +19,10 @@ os.getenv("OPENAI_API_KEY")
 # llm = OpenAI()
 chat_model = ChatOpenAI(model="gpt-3.5-turbo")
 
+# Don't use json_lines, it's not what I have
+
 # TextLoader
-# loader_kwargs={"jq_schema": ".content", "json_lines": True}
+# loader_kwargs={"jq_schema": ".content",}
 # loader = DirectoryLoader(
 #     "data/",
 #     loader_cls=JSONLoader,
