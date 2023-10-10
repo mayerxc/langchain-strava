@@ -6,7 +6,10 @@ import sys
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import DirectoryLoader, JSONLoader, TextLoader
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.indexes import VectorstoreIndexCreator
+from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 
 # from langchain.chains import ConversationalRetrievalChain
 
@@ -17,30 +20,38 @@ load_dotenv()
 os.getenv("OPENAI_API_KEY")
 
 # llm = OpenAI()
-chat_model = ChatOpenAI(model="gpt-3.5-turbo")
+chat_model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-# Don't use json_lines, it's not what I have
 
-# TextLoader
-# loader_kwargs={"jq_schema": ".content",}
-# loader = DirectoryLoader(
-#     "data/",
-#     loader_cls=JSONLoader,
-#     glob="**/*.json",
-#     loader_kwargs={
-#         "jq_schema": ".[]",
-#     },
-# )
-loader2 = DirectoryLoader("data/", loader_cls=TextLoader)
+loader = DirectoryLoader(
+    "data/",
+    loader_cls=JSONLoader,
+    glob="**/*.json",
+    loader_kwargs={
+        "jq_schema": ".[].name",
+    },
+)
+# loader2 = DirectoryLoader("data/", loader_cls=TextLoader)
 
-# docs = loader.load()
-docs = loader2.load()
+docs = loader.load()
+# docs = loader2.load()
 # print(f"docs count {len(docs)}")
-# print(f"docs: {docs[0]}")
+print(f"docs: {docs}")
 
 
-# index = VectorstoreIndexCreator().from_loaders([loader])
-index = VectorstoreIndexCreator().from_loaders([loader2])
+if os.path.exists("persist"):
+    print("os path")
+    vectorstore = Chroma(
+        persist_directory="persist", embedding_function=OpenAIEmbeddings()
+    )
+    index = VectorStoreIndexWrapper(vectorstore=vectorstore)
+else:
+    print("else")
+    index = VectorstoreIndexCreator(
+        # vectorstore_cls=Chroma,
+        # embedding=OpenAIEmbeddings(),
+        vectorstore_kwargs={"persist_directory": "persist"},
+    ).from_loaders([loader])
 query = input("Prompt: ")
 result = index.query(query)
 print(result)
